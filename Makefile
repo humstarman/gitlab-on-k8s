@@ -7,7 +7,7 @@ all: deploy
 deploy: export OP=create 
 deploy: check
 	-@kubectl ${OP} -f namespace.yaml
-	@kubectl ${OP} -f local-volumes.yaml
+	@kubectl ${OP} -f volumes.yaml
 	@kubectl ${OP} -f postgres.yaml
 	@kubectl ${OP} -f redis.yaml
 	@kubectl ${OP} -f gitlab.yaml
