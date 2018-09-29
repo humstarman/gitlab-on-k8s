@@ -57,7 +57,7 @@ spec:
                 gitlab_rails['redis_host'] = 'redis'
                 gitlab_rails['redis_port'] = '6379'
                 gitlab_rails['gitlab_shell_ssh_port'] = 30022
-                external_url 'http://172.31.78.217:30080'
+                external_url 'http://10.254.0.16:80'
                 #external_url 'http://gitlab.example.com:30080'
           ports:
             - containerPort: 30080
@@ -65,8 +65,14 @@ spec:
           volumeMounts:
             - name: gitlab
               mountPath: /home/git/data
+            - name: host-time
+              mountPath: /etc/localtime
+              readOnly: true
       volumes:
         - name: gitlab
           persistentVolumeClaim:
             claimName: gitlab-claim
+        - name: host-time
+          hostPath:
+            path: /etc/localtime
 
