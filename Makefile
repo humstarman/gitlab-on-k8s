@@ -7,7 +7,6 @@ all: deploy
 deploy: export OP=create 
 deploy: check
 	-@kubectl ${OP} -f ${MANIFEST}/namespace.yaml
-	@kubectl ${OP} -f ${MANIFEST}/service.yaml
 	@kubectl ${OP} -f ${MANIFEST}/ingress.yaml
 	@kubectl ${OP} -f ${MANIFEST}/postgres.yaml
 	@kubectl ${OP} -f ${MANIFEST}/redis.yaml

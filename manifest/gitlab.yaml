@@ -11,7 +11,7 @@ spec:
     - name: gitlab-ui
       port: 80
       protocol: TCP
-      targetPort: 30080
+      targetPort: 80
       nodePort: 30080
     - name: gitlab-ssh
       port: 22
@@ -74,7 +74,7 @@ spec:
                 gitlab_rails['redis_host'] = 'redis'
                 gitlab_rails['redis_port'] = '6379'
                 gitlab_rails['gitlab_shell_ssh_port'] = 30022
-                external_url 'http://172.31.78.217:30080'
+                external_url 'http://gmt.gitlab.me'
                 #external_url 'http://gitlab.example.com:30080'
           ports:
             - containerPort: 30080

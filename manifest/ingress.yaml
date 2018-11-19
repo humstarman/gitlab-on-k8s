@@ -5,10 +5,10 @@ metadata:
   namespace: gitlab
 spec:
   rules:
-  - host: my.gitlab.me
+  - host: gmt.gitlab.me
     http:
       paths:
       - path: /
         backend:
-          serviceName: gitlab-cl
+          serviceName: gitlab
           servicePort: 80
