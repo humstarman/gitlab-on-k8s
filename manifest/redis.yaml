@@ -21,29 +21,33 @@ metadata:
   name: redis-claim
   labels:
     app: gitlab
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
   namespace: gitlab
   name: redis
   labels:
     app: gitlab
 spec:
-  strategy:
-    type: Recreate
+  serviceName: "redis"
+  podManagementPolicy: Parallel
+  replicas: 1
   template:
     metadata:
       labels:
         app: gitlab
         tier: backend
     spec:
+      terminationGracePeriodSeconds: 10
       containers:
         - image: redis:3.0.7-alpine
           name: redis
@@ -53,7 +57,13 @@ spec:
           volumeMounts:
             - name: redis
               mountPath: /data
+            - name: host-time
+              mountPath: /etc/localtime
+              readOnly: true
       volumes:
         - name: redis
           persistentVolumeClaim:
             claimName: redis-claim
+        - name: host-time
+          hostPath:
+            path: /etc/localtime

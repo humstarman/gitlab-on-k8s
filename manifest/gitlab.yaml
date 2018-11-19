@@ -30,31 +30,35 @@ metadata:
   name: gitlab-claim
   labels:
     app: gitlab
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
   namespace: gitlab
   name: gitlab
   labels:
     app: gitlab
 spec:
-  strategy:
-    type: Recreate
+  serviceName: "gitlab"
+  podManagementPolicy: Parallel
+  replicas: 1
   template:
     metadata:
       labels:
         app: gitlab
         tier: frontend
     spec:
+      terminationGracePeriodSeconds: 10
       containers:
-        - image: gitlab/gitlab-ce:9.1.0-ce.0
+        - image: gitlab/gitlab-ce:11.4.5-ce.0
           name: gitlab
           env:
             - name: GITLAB_OMNIBUS_CONFIG
@@ -79,10 +83,82 @@ spec:
           volumeMounts:
             - name: gitlab
               mountPath: /home/git/data
-      nodeSelector:
-        gitlab: "true"
       volumes:
         - name: gitlab
           persistentVolumeClaim:
             claimName: gitlab-claim
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: gitlab
+  name: postgresql
+  labels:
+    app: gitlab
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: gitlab
+    tier: postgreSQL
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: gitlab
+  name: postgres-claim
+  labels:
+    app: gitlab
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  namespace: gitlab
+  name: postgresql
+  labels:
+    app: gitlab
+spec:
+  serviceName: "postgresql"
+  podManagementPolicy: Parallel
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gitlab
+        tier: postgreSQL
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - image: postgres:9.6.2-alpine
+          name: postgresql
+          env:
+            - name: POSTGRES_USER
+              value: gitlab
+            - name: POSTGRES_DB
+              value: gitlabhq_production
+            - name: POSTGRES_PASSWORD
+              value: gitlab
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          volumeMounts:
+            - name: postgresql
+              mountPath: /var/lib/postgresql/data
+            - name: host-time
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: postgresql
+          persistentVolumeClaim:
+            claimName: postgres-claim
+        - name: host-time
+          hostPath:
+            path: /etc/localtime

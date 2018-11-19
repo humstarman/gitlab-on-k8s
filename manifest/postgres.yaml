@@ -20,29 +20,33 @@ metadata:
   name: postgres-claim
   labels:
     app: gitlab
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
   namespace: gitlab
   name: postgresql
   labels:
     app: gitlab
 spec:
-  strategy:
-    type: Recreate
+  serviceName: "postgresql"
+  podManagementPolicy: Parallel
+  replicas: 1
   template:
     metadata:
       labels:
         app: gitlab
         tier: postgreSQL
     spec:
+      terminationGracePeriodSeconds: 10
       containers:
         - image: postgres:9.6.2-alpine
           name: postgresql
@@ -59,7 +63,13 @@ spec:
           volumeMounts:
             - name: postgresql
               mountPath: /var/lib/postgresql/data
+            - name: host-time
+              mountPath: /etc/localtime
+              readOnly: true
       volumes:
         - name: postgresql
           persistentVolumeClaim:
             claimName: postgres-claim
+        - name: host-time
+          hostPath:
+            path: /etc/localtime
