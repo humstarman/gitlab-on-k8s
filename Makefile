@@ -18,3 +18,7 @@ check:
 clean: export OP=delete
 clean:
 	@kubectl ${OP} -f ${MANIFEST}/.
+
+ingress:
+	@kubectl delete -f ${MANIFEST}/ingress.yaml
+	@kubectl create -f ${MANIFEST}/ingress.yaml
