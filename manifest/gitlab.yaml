@@ -77,11 +77,12 @@ spec:
                 external_url 'http://gmt.gitlab.me'
                 #external_url 'http://gitlab.example.com:30080'
           ports:
-            - containerPort: 30080
+            - containerPort: 80
               name: gitlab
           volumeMounts:
             - name: gitlab
-              mountPath: /home/git/data
+              #mountPath: /home/git/data
+              mountPath: /var/opt/gitlab/git-data/repositories
             - name: host-time
               mountPath: /etc/localtime
               readOnly: true
