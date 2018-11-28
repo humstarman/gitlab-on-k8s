@@ -1,3 +1,0 @@
-FROM busybox:latest
-ADD ./conf/postgres.conf /tmp/
-ENTRYPOINT ["cp","/tmp/postgres.conf"."/data"]
