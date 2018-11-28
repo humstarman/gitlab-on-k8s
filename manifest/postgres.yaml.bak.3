@@ -51,9 +51,6 @@ spec:
       containers:
         - image: postgres:9.6.2-alpine
           name: postgresql
-          args: 
-            - -c
-            - max_connections=1000 
           env:
             - name: POSTGRES_USER
               value: gitlab
@@ -70,6 +67,27 @@ spec:
             - name: host-time
               mountPath: /etc/localtime
               readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  FILE=/var/lib/postgresql/data/postgres.conf
+                  MAX=1000
+                  if [[ ! -f ${FILE} ]]; then
+                    exit 0
+                  fi
+                  CLIENTS=$(cat ${FILE} | grep max_connections | awk -F "= " '{print $2}')
+                  CLIENTS=${CLIENTS%%#*}
+                  CLIENTS=$(echo $CLIENTS | tr -d '\t')
+                  if [[ ! ${CLIENTS} -lt ${MAX} ]]; then
+                    exit 0
+                  fi
+                  sed -i s?"max_connections = $CLIENTS"?"max_connections = ${MAX}"?g $FILE 
+                  exit 1
+            initialDelaySeconds: 15
+            periodSeconds: 5
       volumes:
         - name: postgresql
           persistentVolumeClaim:
