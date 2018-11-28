@@ -1,4 +1,3 @@
-    #!/bin/bash
 ---
 apiVersion: v1
 kind: Service
