@@ -48,7 +48,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-        - image: postgres:9.6.2-alpine
+        - image: postgres:11.1-alpine
           name: postgresql
           args: 
             - -c
