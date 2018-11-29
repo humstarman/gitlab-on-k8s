@@ -58,8 +58,8 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  namespace: gitlab-data
-  name: gitlab
+  namespace: gitlab
+  name: gitlab-data
   labels:
     app: gitlab
   annotations:
