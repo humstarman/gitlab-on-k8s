@@ -5,12 +5,10 @@ SCRIPT=./scripts
 all: deploy
 
 deploy: export OP=create 
-deploy: check
+deploy: 
 	-@kubectl ${OP} -f ${MANIFEST}/namespace.yaml
 	@kubectl ${OP} -f ${MANIFEST}/rbac.yaml
 	@kubectl ${OP} -f ${MANIFEST}/ingress.yaml
-	@kubectl ${OP} -f ${MANIFEST}/postgres.yaml
-	@kubectl ${OP} -f ${MANIFEST}/redis.yaml
 	@kubectl ${OP} -f ${MANIFEST}/gitlab.yaml
 
 check:

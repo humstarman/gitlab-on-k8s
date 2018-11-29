@@ -27,6 +27,38 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   namespace: gitlab
+  name: gitlab-logs
+  labels:
+    app: gitlab
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: gitlab
+  name: gitlab-config
+  labels:
+    app: gitlab
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: gitlab-data
   name: gitlab
   labels:
     app: gitlab
@@ -57,39 +89,38 @@ spec:
         tier: frontend
     spec:
       containers:
-        - image: gitlab/gitlab-ce:11.4.5-ce.0
+        - image: gitlab/gitlab-ce:latest
+          imagePullPolicy: Always 
           name: gitlab
           env:
             - name: GITLAB_OMNIBUS_CONFIG
               value: |
-                postgresql['enable'] = false
-                gitlab_rails['db_username'] = "gitlab"
-                gitlab_rails['db_password'] = "gitlab"
-                gitlab_rails['db_host'] = "postgresql"
-                gitlab_rails['db_port'] = "5432"
-                gitlab_rails['db_database'] = "gitlabhq_production"
-                gitlab_rails['db_adapter'] = 'postgresql'
-                gitlab_rails['db_encoding'] = 'utf8'
-                redis['enable'] = false
-                gitlab_rails['redis_host'] = 'redis'
-                gitlab_rails['redis_port'] = '6379'
-                gitlab_rails['gitlab_shell_ssh_port'] = 30022
                 external_url 'http://gmt.gitlab.me'
-                #external_url 'http://gitlab.example.com:30080'
           ports:
             - containerPort: 80
-              name: gitlab
+              name: ui
+            - containerPort: 22
+              name: ssh 
           volumeMounts:
-            - name: gitlab
-              #mountPath: /home/git/data
-              mountPath: /var/opt/gitlab/git-data/repositories
+            - name: logs 
+              mountPath: /var/log/gitlab
+            - name: config 
+              mountPath: /etc/gitlab
+            - name: data 
+              mountPath: /var/opt/gitlab
             - name: host-time
               mountPath: /etc/localtime
               readOnly: true
       volumes:
-        - name: gitlab
+        - name: data 
           persistentVolumeClaim:
-            claimName: gitlab
+            claimName: gitlab-data
+        - name: config 
+          persistentVolumeClaim:
+            claimName: gitlab-config
+        - name: logs 
+          persistentVolumeClaim:
+            claimName: gitlab-logs
         - name: host-time
           hostPath:
             path: /etc/localtime
