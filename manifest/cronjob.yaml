@@ -1,0 +1,64 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: maintain-postgres 
+  namespace: gitlab 
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: maintain-postgres 
+            image: gmt.reg.me/test/kube-py-cli:8 
+            imagePullPolicy: IfNotPresent
+            command:
+              - /workspace/maintainer.py 
+            args:
+              - -p  
+              - postgresql-0 
+              - -n 
+              - gitlab
+              - -m 
+              - "LOG:  could not receive data from client: Connection reset by peer" 
+            env:
+              - name: HOST_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.hostIP
+              - name: POD_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+            volumeMounts:
+              - name: host-time
+                mountPath: /etc/localtime
+                readOnly: true
+              - mountPath: /bin/kubectl
+                name: kubectl-binary
+                readOnly: true
+              - mountPath: /root/.kube 
+                name: kubectl-config-path
+                readOnly: true
+              - mountPath: /workspace 
+                name: maintainer-py 
+          volumes:
+            - name: host-time
+              hostPath:
+                path: /etc/localtime
+            - name: docker-socket
+              hostPath:
+                path: /var/run/docker.sock
+            - name: kubectl-binary
+              hostPath:
+                path: /usr/local/bin/kubectl
+            - name: kubectl-config-path
+              configMap:
+                name: kubectl-config
+            - name: maintainer-py 
+              configMap:
+                name: maintainer-py 
+                defaultMode: 0755
+
